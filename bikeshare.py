@@ -8,41 +8,27 @@ CITY_DATA = {
     'washington': 'washington.csv' 
 }
 
-def correct_input(str_inp, runtype):
+def correct_input(prompt, input_type):
     """Check the correctness of the user input based on the expected type.
     
     Args:
-        str_inp (str): The prompt message for user input.
-        runtype (int): Indicates the type of input expected (1 for city, 2 for month, 3 for day).
+        prompt (str): The prompt message for user input.
+        input_type (str): Indicates the type of input expected ('city', 'month', 'day').
     
     Returns:
         str: Validated user input.
     """
+    valid_inputs = {
+        'city': ['chicago', 'new york city', 'washington'],
+        'month': ['january', 'february', 'march', 'april', 'may', 'june', 'all'],
+        'day': ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'all']
+    }
+
     while True:
-        line_input = input(str_inp)
-        try:
-            # Check if input matches expected city names
-            if line_input in ['chicago', 'new york city', 'washington'] and runtype == 1:
-                break
-            # Check if input matches expected month names
-            elif line_input in ['january', 'february', 'march', 'april', 'may', 'june', 'all'] and runtype == 2:
-                break
-            # Check if input matches expected day names
-            elif line_input in ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'all'] and runtype == 3:
-                break
-            else:
-                # Provide feedback for invalid city input
-                if runtype == 1:
-                    print("please enter: chicago, new york city or washington")
-                # Provide feedback for invalid month input
-                if runtype == 2:
-                    print("please enter: january-june or all")
-                # Provide feedback for invalid day input
-                if runtype == 3:
-                    print("please enter: sunday-saturday or all")
-        except ValueError:
-            print("wrong input!")
-    return line_input
+        line_input = input(prompt)
+        if line_input in valid_inputs[input_type]:
+            return line_input
+        print(f"Invalid input! Please enter one of the following: {', '.join(valid_inputs[input_type])}")
 
 def get_filters():
     """
@@ -54,14 +40,9 @@ def get_filters():
         (str) day - name of the day of week to filter by, or "all" to apply no day filter
     """
     print('Hello! Let\'s explore some US bikeshare data!')
-    # Get user input for city (chicago, new york city, washington)
-    city = correct_input("Enter a city: ", 1)
-
-    # Get user input for month (all, january, february, ... , june)
-    month = correct_input("Enter a month between January and June: ", 2)
-
-    # Get user input for day of the week (all, monday, tuesday, ... sunday)
-    day = correct_input("Enter a day between monday and saturday: ", 3)
+    city = correct_input("Enter a city: ", 'city')
+    month = correct_input("Enter a month between January and June: ", 'month')
+    day = correct_input("Enter a day between monday and saturday: ", 'day')
 
     print('-'*40)
     return city, month, day
@@ -78,29 +59,17 @@ def load_data(city, month, day):
     Returns:
         df - Pandas DataFrame containing city data filtered by month and day
     """
-    # Load data file into a DataFrame
     df = pd.read_csv(CITY_DATA[city])
-
-    # Convert the 'Start Time' column to datetime
     df['Start Time'] = pd.to_datetime(df['Start Time'])
-
-    # Extract month, day of week, and hour from 'Start Time' to create new columns
     df['month'] = df['Start Time'].dt.month
-    df['day_of_week'] = df['Start Time'].dt.weekday_name
-    df['hour'] = df['Start Time'].dt.hour
+    df['day_of_week'] = df['Start Time'].dt.day_name()
 
-    # Filter by month if applicable
+    # Filter by month and day
     if month != 'all':
-        # Get the corresponding int for the month
-        months = ['january', 'february', 'march', 'april', 'may', 'june']
-        month = months.index(month) + 1
+        month_idx = ['january', 'february', 'march', 'april', 'may', 'june'].index(month) + 1
+        df = df[df['month'] == month_idx]
 
-        # Filter by month to create a new DataFrame
-        df = df[df['month'] == month]
-
-    # Filter by day of week if applicable
     if day != 'all':
-        # Filter by day of week to create a new DataFrame
         df = df[df['day_of_week'] == day.title()]
 
     return df
@@ -193,8 +162,7 @@ def user_stats(df, city):
     print('-'*40)
 
 def data_info(df):
-    """Displays five rows of bikeshare data if the user wishes to see it."""
-    
+    """Displays five rows of bikeshare data if the user wishes to see it.""" 
     response_locket = ['yes', 'no']
     read_data = ''
     counter = 0
@@ -221,8 +189,7 @@ def data_info(df):
 print('_' * 40)
 
 def main():
-    """Main function to execute the bikeshare data analysis."""
-    
+    """Main function to execute the bikeshare data analysis."""  
     while True:
         city, month, day = get_filters()  # Get user filters
         df = load_data(city, month, day)  # Load the filtered data
