@@ -1,6 +1,6 @@
 import time
 import pandas as pd
-import numpy as np
+
 
 # Dictionary to map city names to their respective CSV data files
 CITY_DATA = { 
